@@ -54,11 +54,11 @@
 
   <section>
     <h2>Conexão com o GitHub</h2>
-    <label for="usuario">clique-aqui</label>
-    <input id="usuario" autocomplete="off" placeholder="seu-usuario">
-    <label for="repo">qr</label>
+    <label for="usuario">Usuário do GitHub</label>
+    <input id="usuario" autocomplete="off" placeholder="clique-aqui">
+    <label for="repo">Nome do repositório</label>
     <input id="repo" autocomplete="off" placeholder="qr">
-    <label for="token">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</label>
+    <label for="token">Token de acesso</label>
     <input id="token" type="password" autocomplete="off" placeholder="github_pat_…">
     <small>Os três campos ficam salvos só neste navegador. Nunca compartilhe o token.</small>
     <div class="row"><button id="btnLimpar" type="button">Apagar dados deste navegador</button></div>
@@ -77,7 +77,7 @@
       localStorage.setItem(KEY, JSON.stringify({
         usuario: $("usuario").value.trim(),
         repo: $("repo").value.trim(),
-        token: $("token").value.trim()
+        token: $("token").value.replace(/\s+/g, "")
       }));
     } catch (e) {}
   }
@@ -90,7 +90,7 @@
   function b64Decode(str) { return decodeURIComponent(escape(atob(str.replace(/\n/g, "")))); }
 
   function api() {
-    var c = { usuario: $("usuario").value.trim(), repo: $("repo").value.trim(), token: $("token").value.trim() };
+    var c = { usuario: $("usuario").value.trim(), repo: $("repo").value.trim(), token: $("token").value.replace(/\s+/g, "") };
     if (!c.usuario || !c.repo || !c.token) throw new Error("Preencha usuário, repositório e token na seção de conexão.");
     return {
       url: "https://api.github.com/repos/" + encodeURIComponent(c.usuario) + "/" + encodeURIComponent(c.repo) + "/contents/destino.json",
@@ -165,8 +165,8 @@
   }
 
   var c = lerConfig();
-  $("usuario").value = c.usuario || "";
-  $("repo").value = c.repo || "";
+  $("usuario").value = c.usuario || "clique-aqui";
+  $("repo").value = c.repo || "qr";
   $("token").value = c.token || "";
 
   $("btnCarregar").addEventListener("click", carregar);
