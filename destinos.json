@@ -15,6 +15,33 @@
    "ativo": true,
    "entregue": false,
    "criado": "2026-11-12"
+  },
+  {
+   "id": "placa-002",
+   "num": 2,
+   "nome": "Placa 002",
+   "destino": "",
+   "ativo": true,
+   "entregue": false,
+   "criado": "2026-11-12"
+  },
+  {
+   "id": "placa-003",
+   "num": 3,
+   "nome": "Placa 003",
+   "destino": "",
+   "ativo": true,
+   "entregue": false,
+   "criado": "2026-11-12"
+  },
+  {
+   "id": "placa-004",
+   "num": 4,
+   "nome": "Placa 004",
+   "destino": "",
+   "ativo": true,
+   "entregue": false,
+   "criado": "2026-11-12"
   }
  ]
 }
