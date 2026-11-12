@@ -6,6 +6,15 @@
    "destino": "https://www.instagram.com/luandsp/",
    "ativo": true,
    "criado": "2026-11-12"
+  },
+  {
+   "id": "placa-001",
+   "num": 1,
+   "nome": "Placa 001",
+   "destino": "",
+   "ativo": true,
+   "entregue": false,
+   "criado": "2026-11-12"
   }
  ]
 }
