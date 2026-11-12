@@ -1,0 +1,11 @@
+{
+ "clientes": [
+  {
+   "id": "padrao",
+   "nome": "Teste (QR atual, sem código)",
+   "destino": "https://www.instagram.com/luandsp/",
+   "ativo": true,
+   "criado": "2026-11-12"
+  }
+ ]
+}
