@@ -1,32 +1,36 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Redirecionando…</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #fff; color: #222; text-align: center; }
-    a { color: #0b5fff; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Redirecionando…</title>
+<style>
+  body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 16px; background: #fff; color: #222; text-align: center; }
+  a { color: #0b5fff; }
+</style>
 </head>
 <body>
-  <main>
-    <p id="msg">Redirecionando…</p>
-    <p><a id="link" hidden>Toque aqui se a página não abrir sozinha</a></p>
-  </main>
-  <script>
-    fetch("destino.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var link = document.getElementById("link");
-        link.href = d.destino;
-        link.hidden = false;
-        window.location.replace(d.destino);
-      })
-      .catch(function () {
-        document.getElementById("msg").textContent = "Não foi possível abrir o link agora. Tente novamente em instantes.";
-      });
-  </script>
+<main>
+  <p id="msg">Redirecionando…</p>
+  <p><a id="link" hidden>Toque aqui se a página não abrir sozinha</a></p>
+</main>
+<script>
+  var id = new URLSearchParams(location.search).get("c") || "padrao";
+  function erro(t) { document.getElementById("msg").textContent = t; }
+  fetch("destinos.json?t=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var c = (d.clientes || []).filter(function (x) { return x.id === id; })[0];
+      if (!c) { erro("Este link não foi encontrado."); return; }
+      if (c.ativo === false) { erro("Esta placa está desativada no momento."); return; }
+      if (!c.destino) { erro("Esta placa ainda não foi configurada."); return; }
+      var l = document.getElementById("link");
+      l.href = c.destino;
+      l.hidden = false;
+      location.replace(c.destino);
+    })
+    .catch(function () { erro("Não foi possível abrir o link agora. Tente novamente em instantes."); });
+</script>
 </body>
 </html>

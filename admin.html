@@ -1,177 +1,320 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Painel do QR code</title>
-  <style>
-    :root { --bg:#f6f7f9; --card:#fff; --text:#1c1f24; --muted:#5d6570; --line:#d9dde3; --accent:#0b5fff; --ok:#0a7a3d; --err:#b42318; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#14161a; --card:#1e2127; --text:#eceef2; --muted:#9aa3af; --line:#363b44; --accent:#6ea0ff; --ok:#4ade80; --err:#ff8a80; }
-    }
-    * { box-sizing: border-box; }
-    body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height:1.5; }
-    main { max-width: 520px; margin: 0 auto; }
-    h1 { font-size: 1.4rem; margin: 0 0 4px; }
-    p.sub { margin: 0 0 20px; color: var(--muted); }
-    section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
-    h2 { font-size: 1rem; margin: 0 0 12px; }
-    label { display:block; font-size: .9rem; margin: 12px 0 4px; }
-    input { width:100%; padding: 10px 12px; font-size: 1rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
-    input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
-    button { padding: 10px 16px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
-    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-    button:disabled { opacity: .6; cursor: wait; }
-    .atual { word-break: break-all; margin: 0; }
-    #status { min-height: 1.5em; margin: 12px 0 0; font-size: .95rem; }
-    #status.ok { color: var(--ok); } #status.err { color: var(--err); }
-    small { color: var(--muted); display:block; margin-top:6px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel dos QR codes</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c1f24; --muted:#5d6570; --line:#d9dde3; --accent:#0b5fff; --ok:#0a7a3d; --err:#b42318; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --card:#1e2127; --text:#eceef2; --muted:#9aa3af; --line:#363b44; --accent:#6ea0ff; --ok:#4ade80; --err:#ff8a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height:1.5; }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  h2 { font-size:1rem; margin:0 0 12px; }
+  p.sub { margin:0 0 20px; color:var(--muted); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; margin-bottom:16px; }
+  summary { cursor:pointer; font-weight:600; }
+  label { display:block; font-size:.9rem; margin:12px 0 4px; }
+  input { width:100%; padding:10px 12px; font-size:1rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+  input:focus-visible, button:focus-visible, summary:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  button { padding:9px 14px; font-size:.95rem; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  #status { min-height:1.5em; margin:10px 0; font-size:.95rem; }
+  #status.ok { color:var(--ok); } #status.err { color:var(--err); }
+  small, .cod { color:var(--muted); font-size:.85rem; }
+  .item { border:1px solid var(--line); border-radius:8px; padding:12px; margin-top:12px; }
+  .item.off { opacity:.7; }
+  .item .top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .item strong { font-size:1.02rem; }
+  .tag { font-size:.8rem; padding:1px 8px; border-radius:99px; border:1px solid var(--line); }
+  .item input { margin-top:8px; }
+  .cod { word-break:break-all; }
+  dialog { border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--text); max-width:360px; width:92%; text-align:center; }
+  dialog::backdrop { background:rgba(0,0,0,.5); }
+  #cv { width:100%; max-width:280px; height:auto; image-rendering:pixelated; border:1px solid var(--line); }
+  #dlink { word-break:break-all; font-size:.85rem; color:var(--muted); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 </head>
 <body>
 <main>
-  <h1>Painel do QR code</h1>
-  <p class="sub">Troque o link para onde o QR code leva, sem entrar no GitHub.</p>
+  <h1>Painel dos QR codes</h1>
+  <p class="sub">Cada placa tem um número e um QR code fixos. Na hora da venda, é só configurar a loja.</p>
 
-  <section>
-    <h2>Destino atual</h2>
-    <p class="atual" id="atual">Ainda não carregado.</p>
-    <div class="row"><button id="btnCarregar" type="button">Carregar destino atual</button></div>
-  </section>
-
-  <section>
-    <h2>Novo destino</h2>
-    <label for="novo">Link completo</label>
-    <input id="novo" type="url" inputmode="url" placeholder="https://www.instagram.com/luandsp/">
-    <div class="row">
-      <button id="btnSalvar" class="primary" type="button">Salvar novo destino</button>
-    </div>
-    <p id="status" role="status"></p>
-    <small>Depois de salvar, a mudança leva de 1 a 2 minutos para valer no QR code.</small>
-  </section>
-
-  <section>
-    <h2>Conexão com o GitHub</h2>
+  <details id="conexao" class="card" open>
+    <summary>Conexão com o GitHub</summary>
     <label for="usuario">Usuário do GitHub</label>
-    <input id="usuario" autocomplete="off" placeholder="clique-aqui">
+    <input id="usuario" autocomplete="off">
     <label for="repo">Nome do repositório</label>
-    <input id="repo" autocomplete="off" placeholder="qr">
+    <input id="repo" autocomplete="off">
     <label for="token">Token de acesso</label>
     <input id="token" type="password" autocomplete="off" placeholder="github_pat_…">
-    <small>Os três campos ficam salvos só neste navegador. Nunca compartilhe o token.</small>
-    <div class="row"><button id="btnLimpar" type="button">Apagar dados deste navegador</button></div>
+    <small>Ficam salvos só neste navegador. Nunca compartilhe o token.</small>
+    <div class="row">
+      <button id="btnConectar" class="primary" type="button">Conectar e carregar lista</button>
+      <button id="btnLimpar" type="button">Apagar dados deste navegador</button>
+    </div>
+  </details>
+
+  <section class="card">
+    <h2>Empresas e placas</h2>
+    <input id="busca" type="search" placeholder="Buscar: número, nome, livre, configurada, entregue…" aria-label="Buscar">
+    <p id="status" role="status"></p>
+    <div id="lista"></div>
   </section>
+
+  <section class="card">
+    <h2>Criar placas novas</h2>
+    <label for="qtd">Quantas placas?</label>
+    <input id="qtd" type="number" min="1" max="50" value="10" inputmode="numeric">
+    <div class="row">
+      <button id="btnLote" class="primary" type="button">Criar placas numeradas</button>
+      <button id="btnImprimir" type="button">Imprimir QR das placas livres</button>
+    </div>
+    <small>Cada placa ganha um número e um QR code que nunca muda. Imprima, cole nas placas e configure a loja na hora.</small>
+  </section>
+
+  <dialog id="dlg">
+    <h2 id="dnome"></h2>
+    <canvas id="cv"></canvas>
+    <p id="dlink"></p>
+    <small>Use este mesmo link para gravar a etiqueta NFC.</small>
+    <div class="row" style="justify-content:center">
+      <button id="btnBaixar" class="primary" type="button">Baixar PNG</button>
+      <button id="btnCopiar" type="button">Copiar link</button>
+      <button id="btnFechar" type="button">Fechar</button>
+    </div>
+  </dialog>
 </main>
 
 <script>
   var $ = function (id) { return document.getElementById(id); };
-  var KEY = "qr-painel";
+  var KEY = "qr-painel-multi", estado = { dados: null, sha: null }, ocupado = false, atual = null;
 
-  function lerConfig() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  function h(tag, props, kids) {
+    var e = document.createElement(tag);
+    for (var k in props) e[k] = props[k];
+    if (typeof kids === "string") kids = [kids];
+    (kids || []).forEach(function (x) { e.appendChild(typeof x === "string" ? document.createTextNode(x) : x); });
+    return e;
   }
-  function salvarConfig() {
-    try {
-      localStorage.setItem(KEY, JSON.stringify({
-        usuario: $("usuario").value.trim(),
-        repo: $("repo").value.trim(),
-        token: $("token").value.replace(/\s+/g, "")
-      }));
-    } catch (e) {}
-  }
-  function status(texto, tipo) {
-    var s = $("status");
-    s.textContent = texto;
-    s.className = tipo || "";
-  }
-  function b64Encode(str) { return btoa(unescape(encodeURIComponent(str))); }
-  function b64Decode(str) { return decodeURIComponent(escape(atob(str.replace(/\n/g, "")))); }
+  function status(t, tipo) { var s = $("status"); s.textContent = t; s.className = tipo || ""; }
+  function b64e(s) { return btoa(unescape(encodeURIComponent(s))); }
+  function b64d(s) { return decodeURIComponent(escape(atob(s.replace(/\n/g, "")))); }
+  function urlValida(u) { try { var x = new URL(u); return x.protocol === "https:" || x.protocol === "http:"; } catch (e) { return false; } }
 
+  function guardar() {
+    try { localStorage.setItem(KEY, JSON.stringify({ u: $("usuario").value.trim(), r: $("repo").value.trim(), t: $("token").value.replace(/\s+/g, "") })); } catch (e) {}
+  }
   function api() {
-    var c = { usuario: $("usuario").value.trim(), repo: $("repo").value.trim(), token: $("token").value.replace(/\s+/g, "") };
-    if (!c.usuario || !c.repo || !c.token) throw new Error("Preencha usuário, repositório e token na seção de conexão.");
+    var u = $("usuario").value.trim(), r = $("repo").value.trim(), t = $("token").value.replace(/\s+/g, "");
+    if (!u || !r || !t) throw new Error("Preencha usuário, repositório e token em “Conexão com o GitHub”.");
     return {
-      url: "https://api.github.com/repos/" + encodeURIComponent(c.usuario) + "/" + encodeURIComponent(c.repo) + "/contents/destino.json",
-      headers: { "Authorization": "Bearer " + c.token, "Accept": "application/vnd.github+json" }
+      url: "https://api.github.com/repos/" + encodeURIComponent(u) + "/" + encodeURIComponent(r) + "/contents/destinos.json",
+      h: { "Authorization": "Bearer " + t, "Accept": "application/vnd.github+json" }
     };
   }
-
-  async function buscarArquivo() {
-    var a = api();
-    var r = await fetch(a.url + "?t=" + Date.now(), { headers: a.headers, cache: "no-store" });
-    if (r.status === 401) throw new Error("Token inválido ou vencido.");
-    if (r.status === 404) throw new Error("Arquivo destino.json não encontrado. Confira usuário, repositório e permissões do token.");
-    if (!r.ok) throw new Error("Erro do GitHub (" + r.status + ").");
-    var j = await r.json();
-    return { sha: j.sha, dados: JSON.parse(b64Decode(j.content)) };
+  async function tarefa(fn) {
+    if (ocupado) return;
+    ocupado = true; document.body.style.cursor = "progress";
+    try { await fn(); } catch (e) { status(e.message, "err"); }
+    ocupado = false; document.body.style.cursor = "";
   }
 
   async function carregar() {
-    $("btnCarregar").disabled = true;
     status("Carregando…");
-    try {
-      salvarConfig();
-      var f = await buscarArquivo();
-      $("atual").textContent = f.dados.destino;
-      $("novo").value = f.dados.destino;
-      status("Destino atual carregado.", "ok");
-    } catch (e) {
-      status(e.message, "err");
-    }
-    $("btnCarregar").disabled = false;
+    guardar();
+    var a = api();
+    var r = await fetch(a.url + "?t=" + Date.now(), { headers: a.h, cache: "no-store" });
+    if (r.status === 401) throw new Error("Token inválido ou vencido.");
+    if (r.status === 404) throw new Error("destinos.json não encontrado. Confira usuário, repositório e permissões do token.");
+    if (!r.ok) throw new Error("Erro do GitHub (" + r.status + ").");
+    var j = await r.json();
+    estado.sha = j.sha;
+    estado.dados = JSON.parse(b64d(j.content));
+    if (!Array.isArray(estado.dados.clientes)) estado.dados.clientes = [];
+    $("conexao").open = false;
+    status("Lista carregada.", "ok");
+    render();
   }
 
-  async function salvar() {
-    var novo = $("novo").value.trim();
-    try {
-      var u = new URL(novo);
-      if (u.protocol !== "http:" && u.protocol !== "https:") throw 0;
-    } catch (e) {
-      status("Digite um link completo, começando com https://", "err");
-      return;
-    }
-    $("btnSalvar").disabled = true;
-    status("Salvando…");
-    try {
-      salvarConfig();
-      var f = await buscarArquivo();
-      var a = api();
-      var corpo = {
-        message: "Troca o destino do QR code",
-        content: b64Encode(JSON.stringify({ destino: novo }) + "\n"),
-        sha: f.sha
-      };
-      var r = await fetch(a.url, {
-        method: "PUT",
-        headers: Object.assign({ "Content-Type": "application/json" }, a.headers),
-        body: JSON.stringify(corpo)
-      });
-      if (r.status === 403 || r.status === 404) throw new Error("O token não tem permissão para editar. Ele precisa de Contents: Read and write neste repositório.");
-      if (!r.ok) throw new Error("Não foi possível salvar (" + r.status + ").");
-      $("atual").textContent = novo;
-      status("Salvo! Em 1 a 2 minutos o QR code já leva para o novo link.", "ok");
-    } catch (e) {
-      status(e.message, "err");
-    }
-    $("btnSalvar").disabled = false;
+  async function gravar(novos, msg) {
+    var a = api();
+    var r = await fetch(a.url, {
+      method: "PUT",
+      headers: Object.assign({ "Content-Type": "application/json" }, a.h),
+      body: JSON.stringify({ message: msg, content: b64e(JSON.stringify(novos, null, 1) + "\n"), sha: estado.sha })
+    });
+    if (r.status === 409 || r.status === 422) throw new Error("A lista mudou em outro lugar. Clique em “Conectar e carregar lista” e tente de novo.");
+    if (r.status === 403 || r.status === 404) throw new Error("O token não tem permissão para editar. Ele precisa de Contents: Read and write.");
+    if (!r.ok) throw new Error("Não foi possível salvar (" + r.status + ").");
+    var j = await r.json();
+    estado.sha = j.content.sha;
+    estado.dados = novos;
+    render();
+  }
+  function clone() { return JSON.parse(JSON.stringify(estado.dados)); }
+  function achar(d, id) { return d.clientes.filter(function (c) { return c.id === id; })[0]; }
+
+  function salvarPlaca(id, nome, dest) {
+    nome = nome.trim(); dest = dest.trim();
+    var c0 = achar(estado.dados, id);
+    if (!nome) { status("Digite o nome da loja.", "err"); return; }
+    if (!urlValida(dest)) { status("Digite um link completo, começando com https://", "err"); return; }
+    if (nome === c0.nome && dest === c0.destino) { status("Nada mudou.", "err"); return; }
+    if (c0.destino && dest !== c0.destino && !confirm("Trocar o destino de “" + c0.nome + "”?\n\nDe: " + c0.destino + "\nPara: " + dest)) return;
+    return tarefa(async function () {
+      var d = clone(), c = achar(d, id);
+      c.nome = nome; c.destino = dest;
+      status("Salvando…");
+      await gravar(d, (c0.destino ? "Altera: " : "Configura: ") + nome + " (" + id + ")");
+      status("Salvo! Em 1 a 2 minutos o QR code abre o link de “" + nome + "”.", "ok");
+    });
+  }
+  function entregar(id, valor) {
+    var c0 = achar(estado.dados, id);
+    var q = valor ? "Marcar “" + c0.nome + "” como entregue? O destino fica travado." : "“" + c0.nome + "” já foi entregue. Mudar o destino leva os clientes dessa loja para outro link. Destravar mesmo?";
+    if (!confirm(q)) return;
+    return tarefa(async function () {
+      var d = clone(); achar(d, id).entregue = valor;
+      status("Salvando…");
+      await gravar(d, (valor ? "Entrega: " : "Destrava: ") + c0.nome + " (" + id + ")");
+      status(valor ? "Marcada como entregue e travada." : "Destravada.", "ok");
+    });
+  }
+  function alternar(id) {
+    var c0 = achar(estado.dados, id), ligar = c0.ativo === false;
+    var q = ligar ? "Reativar “" + c0.nome + "”?" : "Desativar “" + c0.nome + "”?\nA placa deixa de abrir o link até você reativar. Nada é apagado.";
+    if (!confirm(q)) return;
+    return tarefa(async function () {
+      var d = clone(); achar(d, id).ativo = ligar;
+      status("Salvando…");
+      await gravar(d, (ligar ? "Reativa: " : "Desativa: ") + c0.nome + " (" + id + ")");
+      status(ligar ? "Reativada." : "Desativada.", "ok");
+    });
+  }
+  function criarLote() {
+    var n = parseInt($("qtd").value, 10);
+    if (!(n >= 1 && n <= 50)) { status("Digite uma quantidade de 1 a 50.", "err"); return; }
+    if (!estado.dados) { status("Conecte ao GitHub primeiro.", "err"); return; }
+    return tarefa(async function () {
+      var d = clone(), max = 0, hoje = new Date().toISOString().slice(0, 10);
+      d.clientes.forEach(function (c) { if (c.num > max) max = c.num; });
+      for (var i = 1; i <= n; i++) {
+        var num = max + i, cod = String(num).padStart(3, "0");
+        d.clientes.push({ id: "placa-" + cod, num: num, nome: "Placa " + cod, destino: "", ativo: true, entregue: false, criado: hoje });
+      }
+      var a = String(max + 1).padStart(3, "0"), b = String(max + n).padStart(3, "0");
+      status("Salvando…");
+      await gravar(d, "Cria placas " + a + " a " + b);
+      status("Criadas as placas " + a + " a " + b + ". Clique em “Imprimir QR das placas livres”.", "ok");
+    });
   }
 
-  function limpar() {
+  function linkDe(id) { return new URL("./", location.href).href + "?c=" + encodeURIComponent(id); }
+  function qrCanvas(link, cv) {
+    var q = qrcode(0, "M"); q.addData(link); q.make();
+    var n = q.getModuleCount(), cel = 20, mar = 4, t = (n + mar * 2) * cel, x = cv.getContext("2d");
+    cv.width = cv.height = t;
+    x.fillStyle = "#fff"; x.fillRect(0, 0, t, t); x.fillStyle = "#000";
+    for (var r = 0; r < n; r++) for (var k = 0; k < n; k++) if (q.isDark(r, k)) x.fillRect((k + mar) * cel, (r + mar) * cel, cel, cel);
+  }
+  function semQR() {
+    if (typeof qrcode === "undefined") { status("Não foi possível carregar o gerador de QR code. Verifique a internet e recarregue.", "err"); return true; }
+  }
+  function abrirQR(c) {
+    if (semQR()) return;
+    var link = linkDe(c.id);
+    qrCanvas(link, $("cv"));
+    atual = { id: c.id, link: link };
+    $("dnome").textContent = c.nome;
+    $("dlink").textContent = link;
+    $("dlg").showModal();
+  }
+  function imprimirLivres() {
+    if (!estado.dados) { status("Conecte ao GitHub primeiro.", "err"); return; }
+    if (semQR()) return;
+    var livres = estado.dados.clientes.filter(function (c) { return c.num && !c.destino; });
+    if (!livres.length) { status("Não há placas livres. Crie placas novas primeiro.", "err"); return; }
+    var w = window.open("", "_blank");
+    if (!w) { status("O navegador bloqueou a janela de impressão. Permita pop-ups para este site.", "err"); return; }
+    var html = '<!DOCTYPE html><meta charset="utf-8"><title>QR codes das placas</title><style>body{font-family:system-ui,sans-serif;margin:12px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.i{text-align:center;break-inside:avoid;border:1px dashed #999;padding:8px}img{width:100%;max-width:5cm}</style><div class="g">';
+    livres.forEach(function (c) {
+      var cv = document.createElement("canvas"); qrCanvas(linkDe(c.id), cv);
+      html += '<div class="i"><img src="' + cv.toDataURL("image/png") + '" alt=""><div>' + c.nome + "</div></div>";
+    });
+    w.document.write(html + "</div>"); w.document.close(); w.focus();
+    setTimeout(function () { w.print(); }, 500);
+  }
+
+  function estadoDe(c) { return c.ativo === false ? "Desativada" : c.entregue ? "Entregue" : c.destino ? "Configurada" : "Livre"; }
+  function render() {
+    var L = $("lista"), q = $("busca").value.trim().toLowerCase();
+    L.textContent = "";
+    if (!estado.dados) { L.appendChild(h("p", { className: "cod" }, "Conecte ao GitHub para ver a lista.")); return; }
+    var itens = estado.dados.clientes.slice().sort(function (a, b) { return (a.num || 1e9) - (b.num || 1e9) || a.nome.localeCompare(b.nome, "pt-BR"); })
+      .filter(function (c) { return !q || (c.nome + " " + c.id + " " + estadoDe(c)).toLowerCase().indexOf(q) > -1; });
+    if (!itens.length) { L.appendChild(h("p", { className: "cod" }, "Nenhuma placa encontrada.")); return; }
+    itens.forEach(function (c) {
+      var trava = !!c.entregue, bts = [];
+      var nm = h("input", { value: c.nome, disabled: trava }); nm.setAttribute("aria-label", "Nome da loja");
+      var ds = h("input", { type: "url", value: c.destino || "", disabled: trava, placeholder: "Link de destino (https://…)" }); ds.setAttribute("aria-label", "Destino de " + c.nome);
+      if (!trava) {
+        var bS = h("button", { type: "button", className: "primary" }, c.destino ? "Salvar alterações" : "Configurar placa");
+        bS.onclick = function () { salvarPlaca(c.id, nm.value, ds.value); };
+        bts.push(bS);
+      }
+      var bQ = h("button", { type: "button" }, "QR code e link");
+      bQ.onclick = function () { abrirQR(c); };
+      bts.push(bQ);
+      if (c.destino) {
+        var bE = h("button", { type: "button" }, trava ? "Destravar" : "Marcar como entregue");
+        bE.onclick = function () { entregar(c.id, !trava); };
+        bts.push(bE);
+      }
+      var bA = h("button", { type: "button" }, c.ativo === false ? "Reativar" : "Desativar");
+      bA.onclick = function () { alternar(c.id); };
+      bts.push(bA);
+      L.appendChild(h("div", { className: "item" + (c.ativo === false ? " off" : "") }, [
+        h("div", { className: "top" }, [h("strong", {}, c.nome), h("span", { className: "tag" }, estadoDe(c))]),
+        h("div", { className: "cod" }, "Código: " + c.id + (c.criado ? " · criada em " + c.criado : "")),
+        nm, ds,
+        h("div", { className: "row" }, bts)
+      ]));
+    });
+  }
+
+  $("btnConectar").onclick = function () { tarefa(carregar); };
+  $("btnLote").onclick = criarLote;
+  $("btnImprimir").onclick = imprimirLivres;
+  $("busca").oninput = render;
+  $("btnFechar").onclick = function () { $("dlg").close(); };
+  $("btnBaixar").onclick = function () {
+    var a = document.createElement("a");
+    a.href = $("cv").toDataURL("image/png"); a.download = "qr-" + atual.id + ".png"; a.click();
+  };
+  $("btnCopiar").onclick = function () {
+    if (navigator.clipboard) navigator.clipboard.writeText(atual.link).then(function () { $("btnCopiar").textContent = "Copiado!"; setTimeout(function () { $("btnCopiar").textContent = "Copiar link"; }, 1500); });
+  };
+  $("btnLimpar").onclick = function () {
     try { localStorage.removeItem(KEY); } catch (e) {}
     $("usuario").value = ""; $("repo").value = ""; $("token").value = "";
+    estado = { dados: null, sha: null }; render();
     status("Dados apagados deste navegador.", "ok");
-  }
+  };
 
-  var c = lerConfig();
-  $("usuario").value = c.usuario || "clique-aqui";
-  $("repo").value = c.repo || "qr";
-  $("token").value = c.token || "";
-
-  $("btnCarregar").addEventListener("click", carregar);
-  $("btnSalvar").addEventListener("click", salvar);
-  $("btnLimpar").addEventListener("click", limpar);
+  var s = {};
+  try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  $("usuario").value = s.u || "clique-aqui";
+  $("repo").value = s.r || "qr";
+  $("token").value = s.t || "";
+  render();
+  if (s.t) tarefa(carregar);
 </script>
 </body>
 </html>
