@@ -3,15 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Redirecionando...</title>
+  <meta name="robots" content="noindex">
+  <title>Redirecionando…</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #fff; color: #222; text-align: center; }
+    a { color: #0b5fff; }
+  </style>
 </head>
 <body>
-  <p>Redirecionando...</p>
-  <a id="link">Clique aqui se não for automático</a>
+  <main>
+    <p id="msg">Redirecionando…</p>
+    <p><a id="link" hidden>Toque aqui se a página não abrir sozinha</a></p>
+  </main>
   <script>
-    const destino = "https://www.instagram.com/luandsp/";
-    document.getElementById("link").href = destino;
-    window.location.replace(destino);
+    fetch("destino.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var link = document.getElementById("link");
+        link.href = d.destino;
+        link.hidden = false;
+        window.location.replace(d.destino);
+      })
+      .catch(function () {
+        document.getElementById("msg").textContent = "Não foi possível abrir o link agora. Tente novamente em instantes.";
+      });
   </script>
 </body>
 </html>

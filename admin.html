@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Painel do QR code</title>
+  <style>
+    :root { --bg:#f6f7f9; --card:#fff; --text:#1c1f24; --muted:#5d6570; --line:#d9dde3; --accent:#0b5fff; --ok:#0a7a3d; --err:#b42318; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#14161a; --card:#1e2127; --text:#eceef2; --muted:#9aa3af; --line:#363b44; --accent:#6ea0ff; --ok:#4ade80; --err:#ff8a80; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height:1.5; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    p.sub { margin: 0 0 20px; color: var(--muted); }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+    h2 { font-size: 1rem; margin: 0 0 12px; }
+    label { display:block; font-size: .9rem; margin: 12px 0 4px; }
+    input { width:100%; padding: 10px 12px; font-size: 1rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+    input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    button { padding: 10px 16px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .atual { word-break: break-all; margin: 0; }
+    #status { min-height: 1.5em; margin: 12px 0 0; font-size: .95rem; }
+    #status.ok { color: var(--ok); } #status.err { color: var(--err); }
+    small { color: var(--muted); display:block; margin-top:6px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Painel do QR code</h1>
+  <p class="sub">Troque o link para onde o QR code leva, sem entrar no GitHub.</p>
+
+  <section>
+    <h2>Destino atual</h2>
+    <p class="atual" id="atual">Ainda não carregado.</p>
+    <div class="row"><button id="btnCarregar" type="button">Carregar destino atual</button></div>
+  </section>
+
+  <section>
+    <h2>Novo destino</h2>
+    <label for="novo">Link completo</label>
+    <input id="novo" type="url" inputmode="url" placeholder="https://www.instagram.com/luandsp/">
+    <div class="row">
+      <button id="btnSalvar" class="primary" type="button">Salvar novo destino</button>
+    </div>
+    <p id="status" role="status"></p>
+    <small>Depois de salvar, a mudança leva de 1 a 2 minutos para valer no QR code.</small>
+  </section>
+
+  <section>
+    <h2>Conexão com o GitHub</h2>
+    <label for="usuario">Usuário do GitHub</label>
+    <input id="usuario" autocomplete="off" placeholder="seu-usuario">
+    <label for="repo">Nome do repositório</label>
+    <input id="repo" autocomplete="off" placeholder="qr">
+    <label for="token">Token de acesso</label>
+    <input id="token" type="password" autocomplete="off" placeholder="github_pat_…">
+    <small>Os três campos ficam salvos só neste navegador. Nunca compartilhe o token.</small>
+    <div class="row"><button id="btnLimpar" type="button">Apagar dados deste navegador</button></div>
+  </section>
+</main>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = "qr-painel";
+
+  function lerConfig() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function salvarConfig() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        usuario: $("usuario").value.trim(),
+        repo: $("repo").value.trim(),
+        token: $("token").value.trim()
+      }));
+    } catch (e) {}
+  }
+  function status(texto, tipo) {
+    var s = $("status");
+    s.textContent = texto;
+    s.className = tipo || "";
+  }
+  function b64Encode(str) { return btoa(unescape(encodeURIComponent(str))); }
+  function b64Decode(str) { return decodeURIComponent(escape(atob(str.replace(/\n/g, "")))); }
+
+  function api() {
+    var c = { usuario: $("usuario").value.trim(), repo: $("repo").value.trim(), token: $("token").value.trim() };
+    if (!c.usuario || !c.repo || !c.token) throw new Error("Preencha usuário, repositório e token na seção de conexão.");
+    return {
+      url: "https://api.github.com/repos/" + encodeURIComponent(c.usuario) + "/" + encodeURIComponent(c.repo) + "/contents/destino.json",
+      headers: { "Authorization": "Bearer " + c.token, "Accept": "application/vnd.github+json" }
+    };
+  }
+
+  async function buscarArquivo() {
+    var a = api();
+    var r = await fetch(a.url + "?t=" + Date.now(), { headers: a.headers, cache: "no-store" });
+    if (r.status === 401) throw new Error("Token inválido ou vencido.");
+    if (r.status === 404) throw new Error("Arquivo destino.json não encontrado. Confira usuário, repositório e permissões do token.");
+    if (!r.ok) throw new Error("Erro do GitHub (" + r.status + ").");
+    var j = await r.json();
+    return { sha: j.sha, dados: JSON.parse(b64Decode(j.content)) };
+  }
+
+  async function carregar() {
+    $("btnCarregar").disabled = true;
+    status("Carregando…");
+    try {
+      salvarConfig();
+      var f = await buscarArquivo();
+      $("atual").textContent = f.dados.destino;
+      $("novo").value = f.dados.destino;
+      status("Destino atual carregado.", "ok");
+    } catch (e) {
+      status(e.message, "err");
+    }
+    $("btnCarregar").disabled = false;
+  }
+
+  async function salvar() {
+    var novo = $("novo").value.trim();
+    try {
+      var u = new URL(novo);
+      if (u.protocol !== "http:" && u.protocol !== "https:") throw 0;
+    } catch (e) {
+      status("Digite um link completo, começando com https://", "err");
+      return;
+    }
+    $("btnSalvar").disabled = true;
+    status("Salvando…");
+    try {
+      salvarConfig();
+      var f = await buscarArquivo();
+      var a = api();
+      var corpo = {
+        message: "Troca o destino do QR code",
+        content: b64Encode(JSON.stringify({ destino: novo }) + "\n"),
+        sha: f.sha
+      };
+      var r = await fetch(a.url, {
+        method: "PUT",
+        headers: Object.assign({ "Content-Type": "application/json" }, a.headers),
+        body: JSON.stringify(corpo)
+      });
+      if (r.status === 403 || r.status === 404) throw new Error("O token não tem permissão para editar. Ele precisa de Contents: Read and write neste repositório.");
+      if (!r.ok) throw new Error("Não foi possível salvar (" + r.status + ").");
+      $("atual").textContent = novo;
+      status("Salvo! Em 1 a 2 minutos o QR code já leva para o novo link.", "ok");
+    } catch (e) {
+      status(e.message, "err");
+    }
+    $("btnSalvar").disabled = false;
+  }
+
+  function limpar() {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $("usuario").value = ""; $("repo").value = ""; $("token").value = "";
+    status("Dados apagados deste navegador.", "ok");
+  }
+
+  var c = lerConfig();
+  $("usuario").value = c.usuario || "";
+  $("repo").value = c.repo || "";
+  $("token").value = c.token || "";
+
+  $("btnCarregar").addEventListener("click", carregar);
+  $("btnSalvar").addEventListener("click", salvar);
+  $("btnLimpar").addEventListener("click", limpar);
+</script>
+</body>
+</html>
