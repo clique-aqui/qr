@@ -21,7 +21,7 @@
    "num": 2,
    "nome": "Placa 002",
    "destino": "",
-   "ativo": false,
+   "ativo": true,
    "entregue": false,
    "criado": "2026-11-12"
   },
